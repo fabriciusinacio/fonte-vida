@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Versículos Diários - Português</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .verse-container {
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .verse-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .verse-text {
+            font-size: 1.4em;
+            color: #2d3748;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .verse-reference {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .verse-version {
+            font-size: 0.9em;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .explanation {
+            font-size: 1em;
+            color: #4a5568;
+            line-height: 1.7;
+            text-align: left;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: pulse 1.5s infinite;
+        }
+
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            min-width: 140px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .date {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .share-button {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .share-button:hover:not(:disabled) {
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .daily-button {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .daily-button:hover:not(:disabled) {
+            box-shadow: 0 8px 20px rgba(237, 137, 54, 0.4);
+        }
+
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .success {
+            color: #22543d;
+            background: #c6f6d5;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .api-status {
+            background: #e6fffa;
+            color: #234e52;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            text-align: left;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .verse-text {
+                font-size: 1.2em;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 Versículo do Dia</h1>
+        <div class="date" id="currentDate"></div>
+        
+        <div class="verse-container" id="verseContainer">
+            <div class="loading">Carregando versículo...</div>
+        </div>
+        
+        <div class="buttons">
+            <button id="dailyBtn" onclick="getDailyVerse()" class="daily-button">📅 Versículo do Dia</button>
+            <button id="randomBtn" onclick="getRandomVerse()">🎲 Versículo Aleatório</button>
+            <button id="shareBtn" class="share-button" onclick="shareVerse()" disabled>📤 Compartilhar</button>
+        </div>
+
+        <div class="api-status">
+            <strong>🔌 Status:</strong> <span id="apiStatus">Versículos em Português</span><br>
+            <strong>📖 Versão:</strong> <span id="bibleVersion">Almeida Revista e Atualizada</span><br>
+            <strong>💾 Fonte:</strong> <span id="apiSource">Base Local Portuguesa</span>
+        </div>
+    </div>
+
+    <script>
+        let currentVerse = null;
+        let isLoading = false;
+
+        // 30 Versículos em português - Um para cada dia do mês
+        const versiculosPortugues = [
+            {
+                ref: "João 3:16",
+                text: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna.",
+                explanation: "Este é o versículo mais conhecido da Bíblia, resumindo o evangelho em poucas palavras. Mostra o amor incondicional de Deus e como Ele oferece salvação através de Jesus Cristo a todos que crerem."
+            },
+            {
+                ref: "Filipenses 4:13",
+                text: "Posso todas as coisas naquele que me fortalece.",
+                explanation: "Paulo ensina que nossa força vem de Cristo. Não significa que podemos fazer literalmente qualquer coisa, mas que com Cristo podemos enfrentar todas as circunstâncias da vida com coragem e fé."
+            },
+            {
+                ref: "Salmos 23:1",
+                text: "O Senhor é o meu pastor; nada me faltará.",
+                explanation: "Davi compara Deus a um pastor cuidadoso. Quando reconhecemos Deus como nosso pastor, podemos confiar que Ele cuidará de nossas necessidades essenciais e nos guiará por caminhos seguros."
+            },
+            {
+                ref: "Romanos 8:28",
+                text: "E sabemos que todas as coisas contribuem juntamente para o bem daqueles que amam a Deus, daqueles que são chamados por seu decreto.",
+                explanation: "Uma promessa poderosa de que Deus pode usar até mesmo situações difíceis para nosso bem. Isso não significa que tudo que acontece é bom, mas que Deus pode transformar qualquer situação."
+            },
+            {
+                ref: "Provérbios 3:5-6",
+                text: "Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento. Reconhece-o em todos os teus caminhos, e ele endireitará as tuas veredas.",
+                explanation: "Um convite para confiar em Deus em vez de apenas em nossa própria sabedoria. Quando buscamos sinceramente a orientação de Deus em nossas decisões, Ele nos dirige no caminho certo."
+            },
+            {
+                ref: "Mateus 11:28",
+                text: "Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.",
+                explanation: "Jesus oferece descanso espiritual para todos que se sentem sobrecarregados pela vida. É um convite à graça, ao perdão e ao relacionamento pessoal com Deus através de Cristo."
+            },
+            {
+                ref: "Isaías 41:10",
+                text: "Não temas, porque eu sou contigo; não te assombres, porque eu sou teu Deus; eu te fortaleço, e te ajudo, e te sustento com a destra da minha justiça.",
+                explanation: "Deus promete Sua presença constante e apoio. Não precisamos ter medo das circunstâncias porque Ele está conosco, nos fortalece e nos sustenta com Seu poder."
+            },
+            {
+                ref: "Jeremias 29:11",
+                text: "Porque eu bem sei os pensamentos que tenho a vosso respeito, diz o Senhor; pensamentos de paz e não de mal, para vos dar o fim que esperais.",
+                explanation: "Deus revela que tem planos bons para nossa vida. Mesmo nas dificuldades, podemos ter esperança no futuro que Ele preparou, sabendo que Seus planos são sempre para nosso bem."
+            },
+            {
+                ref: "1 João 1:9",
+                text: "Se confessarmos os nossos pecados, ele é fiel e justo para nos perdoar os pecados e nos purificar de toda injustiça.",
+                explanation: "A provisão maravilhosa de Deus para perdão. Quando confessamos nossos pecados sinceramente, Ele é fiel para perdoar completamente, baseado em Sua justiça e amor."
+            },
+            {
+                ref: "1 Coríntios 13:4-5",
+                text: "O amor é sofredor, é benigno; o amor não é invejoso; o amor não trata com leviandade, não se ensoberbece, não se porta com indecência.",
+                explanation: "A definição bíblica do amor verdadeiro. É um amor sacrificial que busca o bem do outro, demonstrado através de paciência, bondade, humildade e pureza de motivos."
+            },
+            {
+                ref: "Salmos 46:10",
+                text: "Aquietai-vos e sabei que eu sou Deus; serei exaltado entre os gentios; serei exaltado sobre a terra.",
+                explanation: "Um convite para confiar e descansar em Deus. Em meio às tempestades da vida, podemos encontrar paz sabendo que Deus está no controle de todas as situações."
+            },
+            {
+                ref: "2 Timóteo 1:7",
+                text: "Porque Deus não nos deu o espírito de temor, mas de fortaleza, e de amor, e de moderação.",
+                explanation: "Deus nos capacita com coragem, amor e autodomínio. O medo não vem de Deus, mas Ele nos dá poder para vencer nossos medos através do Seu Espírito."
+            },
+            {
+                ref: "Efésios 2:8-9",
+                text: "Porque pela graça sois salvos, por meio da fé; e isso não vem de vós; é dom de Deus. Não vem das obras, para que ninguém se glorie.",
+                explanation: "A salvação é um presente gratuito de Deus, não algo que merecemos ou conquistamos. É pela graça divina, através da fé, que somos salvos e reconciliados com Deus."
+            },
+            {
+                ref: "Mateus 6:26",
+                text: "Olhai para as aves do céu, que nem semeiam, nem segam, nem ajuntam em celeiros; e vosso Pai celestial as alimenta. Não tendes vós muito mais valor do que elas?",
+                explanation: "Jesus ensina sobre a providência de Deus e nosso valor diante Dele. Se Deus cuida das aves, quanto mais cuidará de nós, que somos Seus filhos preciosos."
+            },
+            {
+                ref: "Josué 1:9",
+                text: "Não to mandei eu? Esforça-te e tem bom ânimo; não temas, nem te espantes, porque o Senhor, teu Deus, é contigo por onde quer que andares.",
+                explanation: "Deus encoraja Josué com a promessa de Sua presença constante. Esta promessa se estende a todos nós: podemos ser corajosos porque Deus está sempre conosco."
+            },
+            {
+                ref: "Salmos 91:1-2",
+                text: "Aquele que habita no esconderijo do Altíssimo, à sombra do Onipotente descansará. Direi do Senhor: Ele é o meu Deus, o meu refúgio, a minha fortaleza, e nele confiarei.",
+                explanation: "Uma declaração poderosa de confiança em Deus como nosso refúgio seguro. Quando habitamos em intimidade com Deus, encontramos proteção e paz em Sua presença."
+            },
+            {
+                ref: "Hebreus 11:1",
+                text: "Ora, a fé é o firme fundamento das coisas que se esperam e a prova das coisas que se não veem.",
+                explanation: "A definição bíblica da fé. A fé não é crença cega, mas confiança fundamentada no caráter de Deus, mesmo quando não podemos ver o resultado final."
+            },
+            {
+                ref: "Mateus 6:33",
+                text: "Mas buscai primeiro o reino de Deus, e a sua justiça, e todas essas coisas vos serão acrescentadas.",
+                explanation: "Jesus ensina sobre prioridades corretas. Quando colocamos Deus em primeiro lugar em nossa vida, Ele cuida de nossas necessidades práticas e materiais."
+            },
+            {
+                ref: "1 Pedro 5:7",
+                text: "Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.",
+                explanation: "Um convite para entregar nossas preocupações a Deus. Em vez de carregar o peso da ansiedade, podemos confiar nossos medos e preocupações ao cuidado amoroso de Deus."
+            },
+            {
+                ref: "Gálatas 5:22-23",
+                text: "Mas o fruto do Espírito é: amor, gozo, paz, longanimidade, benignidade, bondade, fé, mansidão, temperança.",
+                explanation: "As características que o Espírito Santo desenvolve em nós. Não são qualidades que produzimos por esforço próprio, mas frutos naturais da vida em Cristo."
+            },
+            {
+                ref: "Apocalipse 21:4",
+                text: "E Deus limpará de seus olhos toda lágrima, e não haverá mais morte, nem pranto, nem clamor, nem dor, porque já as primeiras coisas são passadas.",
+                explanation: "A promessa gloriosa do futuro que nos aguarda. Um dia, todo sofrimento chegará ao fim e viveremos eternamente na presença de Deus, livres de dor e tristeza."
+            },
+            {
+                ref: "Isaías 40:31",
+                text: "Mas os que esperam no Senhor renovarão as suas forças, subirão com asas como águias; correrão e não se cansarão; caminharão e não se fatigarão.",
+                explanation: "A promessa de renovação para aqueles que confiam em Deus. Quando nossa força natural se esgota, Deus nos renova e nos capacita a continuar."
+            },
+            {
+                ref: "Romanos 10:9",
+                text: "A saber: Se, com a tua boca, confessares ao Senhor Jesus e, em teu coração, creres que Deus o ressuscitou dos mortos, serás salvo.",
+                explanation: "O caminho simples para a salvação. A fé em Jesus Cristo e Sua ressurreição, confessada publicamente, é tudo que precisamos para sermos salvos."
+            },
+            {
+                ref: "Salmos 119:105",
+                text: "Lâmpada para os meus pés é tua palavra e luz, para o meu caminho.",
+                explanation: "A Palavra de Deus é nossa guia confiável. Assim como uma lâmpada ilumina o caminho no escuro, a Bíblia nos orienta nas decisões e circunstâncias da vida."
+            },
+            {
+                ref: "João 14:6",
+                text: "Disse-lhe Jesus: Eu sou o caminho, e a verdade, e a vida. Ninguém vem ao Pai senão por mim.",
+                explanation: "Jesus declara ser o único caminho para Deus. Ele não é apenas um entre muitos caminhos, mas O caminho exclusivo para relacionamento com o Pai celestial."
+            },
+            {
+                ref: "2 Coríntios 5:17",
+                text: "Assim que, se alguém está em Cristo, nova criatura é: as coisas velhas já passaram; eis que tudo se fez novo.",
+                explanation: "A transformação radical que acontece quando aceitamos Cristo. Não é apenas uma mudança externa, mas uma renovação completa de nossa identidade espiritual."
+            },
+            {
+                ref: "Efésios 6:11",
+                text: "Revesti-vos de toda a armadura de Deus, para que possais estar firmes contra as astutas ciladas do diabo.",
+                explanation: "A vida cristã é uma batalha espiritual. Deus nos equipa com armas espirituais - verdade, justiça, paz, fé, salvação e Sua Palavra - para vencermos."
+            },
+            {
+                ref: "Tiago 1:17",
+                text: "Toda boa dádiva e todo dom perfeito vêm do alto, descendo do Pai das luzes, em quem não há mudança, nem sombra de variação.",
+                explanation: "Deus é a fonte de tudo que é bom em nossa vida. Ao contrário dos humanos, Ele é constante e confiável, sempre dando o que é melhor para nós."
+            },
+            {
+                ref: "1 Tessalonicenses 5:16-18",
+                text: "Regozijai-vos sempre. Orai sem cessar. Em tudo, dai graças, porque esta é a vontade de Deus em Cristo Jesus para convosco.",
+                explanation: "Três atitudes essenciais para uma vida cristã saudável: alegria constante, oração contínua e gratidão em todas as circunstâncias, pois esta é a vontade de Deus."
+            },
+            {
+                ref: "Colossenses 3:23",
+                text: "E, tudo quanto fizerdes, fazei-o de todo o coração, como ao Senhor e não aos homens.",
+                explanation: "Nossa motivação para o trabalho e serviço deve ser agradar a Deus. Quando fazemos tudo como se fosse para Jesus, transformamos tarefas comuns em atos de adoração."
+            }
+        ];
+
+        function formatDate() {
+            const hoje = new Date();
+            const opcoes = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return hoje.toLocaleDateString('pt-BR', opcoes);
+        }
+
+        function updateApiStatus(status, source = '', version = '') {
+            document.getElementById('apiStatus').textContent = status;
+            document.getElementById('apiSource').textContent = source;
+            document.getElementById('bibleVersion').textContent = version;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const container = document.getElementById('verseContainer');
+            const buttons = document.querySelectorAll('button');
+            
+            if (loading) {
+                container.innerHTML = '<div class="loading">Carregando versículo...</div>';
+                buttons.forEach(btn => btn.disabled = true);
+            } else {
+                buttons.forEach(btn => {
+                    if (btn.id !== 'shareBtn') btn.disabled = false;
+                });
+            }
+        }
+
+        function displayVerse(verseData) {
+            const container = document.getElementById('verseContainer');
+            const shareBtn = document.getElementById('shareBtn');
+            
+            container.innerHTML = `
+                <div class="verse-text">"${verseData.text}"</div>
+                <div class="verse-reference">${verseData.ref}</div>
+                <div class="verse-version">Almeida Revista e Atualizada</div>
+                <div class="explanation">${verseData.explanation}</div>
+            `;
+            
+            currentVerse = verseData;
+            shareBtn.disabled = false;
+            updateApiStatus('✅ Versículo carregado', 'Base Local Portuguesa', 'Almeida Revista e Atualizada');
+            
+            // Animação suave
+            container.style.animation = 'none';
+            container.offsetHeight;
+            container.style.animation = 'fadeIn 0.5s ease-out';
+        }
+
+        function getDailyVerse() {
+            setLoading(true);
+            
+            setTimeout(() => {
+                // Versículo baseado no dia do mês (1-30) para não repetir durante o mês
+                const hoje = new Date();
+                const dayOfMonth = hoje.getDate(); // 1-31
+                const verseIndex = (dayOfMonth - 1) % versiculosPortugues.length; // 0-29
+                const dailyVerse = versiculosPortugues[verseIndex];
+                
+                displayVerse(dailyVerse);
+                setLoading(false);
+            }, 800);
+        }
+
+        function getRandomVerse() {
+            setLoading(true);
+            
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * versiculosPortugues.length);
+                const randomVerse = versiculosPortugues[randomIndex];
+                
+                displayVerse(randomVerse);
+                setLoading(false);
+            }, 600);
+        }
+
+        function shareVerse() {
+            if (currentVerse) {
+                const shareText = `"${currentVerse.text}"\n\n- ${currentVerse.ref}\n\n💭 ${currentVerse.explanation}\n\n🙏 Versículo do Dia - Compartilhado com amor`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Versículo do Dia',
+                        text: shareText,
+                    }).catch(err => console.log('Erro ao compartilhar:', err));
+                } else {
+                    // Fallback para copiar para clipboard
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        showSuccess('✅ Versículo copiado para área de transferência!');
+                    }).catch(() => {
+                        // Fallback manual
+                        const textArea = document.createElement('textarea');
+                        textArea.value = shareText;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        showSuccess('✅ Versículo copiado!');
+                    });
+                }
+            }
+        }
+
+        function showSuccess(message) {
+            const container = document.getElementById('verseContainer');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            container.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        // Inicializar app
+        document.getElementById('currentDate').textContent = formatDate();
+        
+        // Carregar versículo do dia automaticamente
+        getDailyVerse();
+    </script>
+</body>
+</html>
